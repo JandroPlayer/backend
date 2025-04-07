@@ -69,6 +69,11 @@ public class UserService {
         return userRepository.save(user); // Guardar los cambios
     }
 
+    public Optional<User> getUserByEmail(String email) {
+        return userRepository.findByEmail(email);  // Este método buscará el usuario en la base de datos por su email
+    }
+
+
     // Eliminar un usuario por ID
     public void deleteUser(Integer id) {
         if (!userRepository.existsById(id)) {

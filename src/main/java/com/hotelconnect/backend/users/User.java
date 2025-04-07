@@ -22,4 +22,6 @@ public class User {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
+
+    private String img;
 }

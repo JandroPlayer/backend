@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,14 +38,33 @@ public class UserController {
         // Llamamos al servicio para verificar el login
         Map<String, Object> loginResponse = userService.loginUser(user);
 
-        // Si el login es exitoso, retornamos un status 200 (OK) con el mensaje
+        // Si el login es exitoso
         if ((boolean) loginResponse.get("success")) {
-            return ResponseEntity.ok(loginResponse);
+            // Obtener los detalles completos del usuario (suponiendo que ya tienes acceso al usuario)
+            User loggedInUser = userService.getUserByEmail(user.getEmail()).orElse(null);
+
+            // Si el usuario fue encontrado
+            if (loggedInUser != null) {
+                // Crear la respuesta con todos los datos del usuario
+                Map<String, Object> userResponse = new HashMap<>();
+                userResponse.put("id", loggedInUser.getId());
+                userResponse.put("name", loggedInUser.getName());
+                userResponse.put("email", loggedInUser.getEmail());
+                userResponse.put("createdAt", loggedInUser.getCreatedAt());
+                userResponse.put("img", loggedInUser.getImg());  // Suponiendo que el usuario tiene una imagen
+
+                // Puedes agregar más campos según sea necesario
+                return ResponseEntity.ok(userResponse);
+            } else {
+                // Si no se encontró el usuario, retornar un error
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("message", "Usuario no encontrado"));
+            }
         } else {
-            // Si el login falla, retornamos un status 400 (BAD_REQUEST) con el mensaje
+            // Si el login falla, retornar un error con el mensaje
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(loginResponse);
         }
     }
+
 
 
     @GetMapping("/")

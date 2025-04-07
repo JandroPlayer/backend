@@ -21,6 +21,5 @@ public class Hotel {
     private Integer stars;
     private Double price_per_night;
     private Integer available_rooms;
-
-    // Getters i Setters
+    private String img;
 }
