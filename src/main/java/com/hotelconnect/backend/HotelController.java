@@ -5,7 +5,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/hotels")
@@ -21,6 +23,11 @@ public class HotelController {
         return hotelService.getAllHotels();
     }
 
+    @PostMapping
+    public ResponseEntity<Hotel> saveHotel(@RequestBody Hotel hotel) {
+        return ResponseEntity.ok(hotelService.saveHotel(hotel));
+    }
+
     // 🔹 Obtenir hotel per ID
     @GetMapping("/{id}")
     public ResponseEntity<Hotel> getHotelById(@PathVariable Long id) {
@@ -30,6 +37,17 @@ public class HotelController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
+
+    @PostMapping("/importar")
+    public Map<String, Object> importar() throws Exception {
+        List<String> insertados = hotelService.importarHotelesDesdeGoogle();
+
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("mensaje", "✅ Hoteles insertados: " + insertados.size());
+        respuesta.put("hoteles", insertados);
+
+        return respuesta;
     }
 }
 
