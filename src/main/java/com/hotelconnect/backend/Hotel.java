@@ -24,6 +24,7 @@ public class Hotel {
     private String phone;
     private String website;
     private String googleMapsUrl;
+    @Column(length = 1000)
     private String imageUrl;
 }
 
