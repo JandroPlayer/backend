@@ -1,5 +1,6 @@
 package com.hotelconnect.backend.users;
 
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -15,21 +16,28 @@ public class UserService {
     private UserRepository userRepository;
 
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     public Map<String, Object> registerUser(User user) {
         Map<String, Object> response = new HashMap<>();
 
-        // Verificar si el usuario ya existe
-        if (userRepository.findByEmail(user.getEmail()).isPresent()) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             response.put("success", false);
-            response.put("message", "El correo ya está registrado.");
-            return response;  // Si ya existe, devolvemos el mensaje y el estado de error
+            response.put("message", "El correo ya está registrado");
+            return response;
         }
 
-        // Guardar el nuevo usuario
+        // 🔐 Encriptar la contraseña antes de guardar
+        String hashedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPassword);
+
+        // Guardar el usuario en la base de datos
         userRepository.save(user);
+
         response.put("success", true);
-        response.put("message", "Usuario registrado con éxito.");
-        return response;  // Si el registro fue exitoso, devolvemos el mensaje de éxito
+        response.put("message", "Usuario registrado con éxito");
+        return response;
     }
 
     // Metodo modificado para el login
@@ -38,15 +46,19 @@ public class UserService {
 
         Map<String, Object> response = new HashMap<>();
 
-        // Verificamos si el usuario existe y la contraseña es correcta
-        if (foundUser.isPresent() && foundUser.get().getPassword().equals(user.getPassword())) {
-            response.put("success", true);
-            response.put("message", "Inicio de sesión exitoso");
-        } else {
-            response.put("success", false);
-            response.put("message", "Correo o contraseña incorrectos");
+        if (foundUser.isPresent()) {
+            // 🔍 Compara la contrasenya introduïda amb la contrasenya encriptada
+            boolean passwordMatches = passwordEncoder.matches(user.getPassword(), foundUser.get().getPassword());
+
+            if (passwordMatches) {
+                response.put("success", true);
+                response.put("message", "Inicio de sesión exitoso");
+                return response;
+            }
         }
 
+        response.put("success", false);
+        response.put("message", "Correo o contraseña incorrectos");
         return response;
     }
 

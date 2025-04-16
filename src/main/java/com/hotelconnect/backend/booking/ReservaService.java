@@ -30,4 +30,8 @@ public class ReservaService {
     public List<Reserva> getReservasByHotel(Long hotelId) {
         return reservaRepository.findByHotelId(hotelId);
     }
+
+    public List<Reserva> getReservasByUser(Integer userId) {
+        return reservaRepository.findByUserId((userId));
+    }
 }
