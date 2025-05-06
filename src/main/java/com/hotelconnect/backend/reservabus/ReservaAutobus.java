@@ -43,6 +43,8 @@ public class ReservaAutobus {
     @Column(nullable = false)
     private double preu;
 
+    private boolean pagada = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Date createdAt;

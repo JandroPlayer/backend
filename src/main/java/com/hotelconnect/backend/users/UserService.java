@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -92,6 +93,21 @@ public class UserService {
             throw new IllegalArgumentException("Usuario no encontrado.");
         }
         userRepository.deleteById(id); // Eliminar usuario por ID
+    }
+
+    public User updateUserBalance(int userId, double amount) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        BigDecimal amountToSubtract = BigDecimal.valueOf(amount);
+
+        // Verificar que el usuario tiene suficiente saldo
+        if (user.getSaldo().compareTo(amountToSubtract) >= 0) {
+            user.setSaldo(user.getSaldo().subtract(amountToSubtract));
+            return userRepository.save(user);
+        } else {
+            throw new RuntimeException("Saldo insuficiente");
+        }
     }
 }
 

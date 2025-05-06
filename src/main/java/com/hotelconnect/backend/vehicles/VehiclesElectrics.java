@@ -20,5 +20,9 @@ public abstract class VehiclesElectrics {
     private int anyFabricacio;
     @Column(name = "autonomiakm")
     private int autonomiaKm;
+    @Column(name = "preu_per_persona")
+    private Double preuPerPersona;
+    @Column(name = "image_url")
+    private String imageUrl;
 }
 

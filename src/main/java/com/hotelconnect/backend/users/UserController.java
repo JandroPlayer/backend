@@ -96,6 +96,18 @@ public class UserController {
     public void deleteUser(@PathVariable("id") Integer id) {
         userService.deleteUser(id);
     }
+
+    @PutMapping("/{id}/pay")
+    public ResponseEntity<?> pay(@PathVariable int id, @RequestBody Map<String, Double> request) {
+        try {
+            double amount = request.get("amount");
+            User updatedUser = userService.updateUserBalance(id, amount);
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
+        }
+    }
+
 }
 
 

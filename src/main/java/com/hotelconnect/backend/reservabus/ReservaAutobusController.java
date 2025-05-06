@@ -5,6 +5,7 @@ import com.hotelconnect.backend.users.UserRepository;
 import com.hotelconnect.backend.vehicles.Autobusos;
 import com.hotelconnect.backend.vehicles.AutobusosRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,8 @@ public class ReservaAutobusController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private ReservaAutobusRepository reservaAutobusRepository;
 
     @Autowired
     public ReservaAutobusController(ReservaAutobusService reservaAutobusService) {
@@ -88,5 +91,22 @@ public class ReservaAutobusController {
     public void deleteReserva(@PathVariable Long id) {
         reservaAutobusService.deleteReserva(id);
     }
+
+    @PutMapping("/{reservaId}/pagar")
+    public ResponseEntity<ReservaAutobus> pagarReserva(@PathVariable Long reservaId) {
+        Optional<ReservaAutobus> reservaOpt = reservaAutobusRepository.findById(reservaId);
+        if (reservaOpt.isPresent()) {
+            ReservaAutobus reserva = reservaOpt.get();
+            if (reserva.isPagada()) {
+                return ResponseEntity.badRequest().build(); // No mensaje
+            }
+            reserva.setPagada(true);
+            reservaAutobusRepository.save(reserva);
+            return ResponseEntity.ok(reserva); // Devuelve el objeto como JSON
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
 
