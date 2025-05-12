@@ -1,4 +1,4 @@
-package com.hotelconnect.backend;
+package com.hotelconnect.backend.hotels;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -39,6 +39,18 @@ public class HotelController {
         }
     }
 
+    @GetMapping("/without-activities")
+    public List<Hotel> getHotelsWithoutActivitats() {
+        return hotelService.obtenirTotsElsHotelsSenseActivitats();
+    }
+
+    @GetMapping("/{id}/without-activities")
+    public ResponseEntity<HotelDTO> getHotelWithoutActivities(@PathVariable Long id) {
+        Hotel hotel = hotelService.obtenerHotelSinActividades(id);  // Metodo que omite las actividades
+        HotelDTO hotelDTO = new HotelDTO(hotel);
+        return ResponseEntity.ok(hotelDTO);
+    }
+
     @PostMapping("/importar")
     public Map<String, Object> importar() throws Exception {
         List<String> insertados = hotelService.importarHotelesDesdeGoogle();
@@ -49,5 +61,29 @@ public class HotelController {
 
         return respuesta;
     }
+
+    @PostMapping("/actualizarimg")
+    public Map<String, Object> actualizarImagenes() throws Exception {
+        List<String> actualizados = hotelService.actualizarFotosHotelesDesdeGoogle();
+
+        Map<String, Object> respuesta = new HashMap<>();
+        respuesta.put("mensaje", "🖼️ Imágenes actualizadas: " + actualizados.size());
+        respuesta.put("hoteles", actualizados);
+
+        return respuesta;
+    }
+
+
+    @PostMapping("/actualitzar-imgs")
+    public Map<String, Object> actualitzarImatges() {
+        List<String> actualitzats = hotelService.actualitzarTotesLesImatges();
+
+        Map<String, Object> resposta = new HashMap<>();
+        resposta.put("missatge", "🖼️ Imatges actualitzades: " + actualitzats.size());
+        resposta.put("hotels", actualitzats);
+
+        return resposta;
+    }
+
 }
 

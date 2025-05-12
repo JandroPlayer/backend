@@ -1,15 +1,21 @@
 package com.hotelconnect.backend.booking;
 
-import com.hotelconnect.backend.Hotel;
-import com.hotelconnect.backend.HotelRepository;
+import com.hotelconnect.backend.activitats.*;
+import com.hotelconnect.backend.hotels.Hotel;
+import com.hotelconnect.backend.hotels.HotelRepository;
 import com.hotelconnect.backend.users.User;
 import com.hotelconnect.backend.users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reservas")
@@ -20,6 +26,17 @@ public class ReservaController {
     private HotelRepository hotelRepository;
 
     private final ReservaService reservaService;
+
+    @Autowired
+    private ActivitatRepository activitatRepo;
+
+    @Autowired
+    private HotelActivitatRepository hotelActivitatRepo;
+
+    @Value("${google.api.key}")
+    private String apiKey;
+    @Autowired
+    private ActivitatService activitatService;
 
     @Autowired
     public ReservaController(ReservaService reservaService) {
@@ -80,5 +97,106 @@ public class ReservaController {
     public List<Reserva> obtenerReservasPorUsuario(@PathVariable Integer userId) {
         return reservaService.getReservasByUser(userId);
     }
+
+    // Activitats
+    @GetMapping("/{id}/activitats/load")
+    public String carregarActivitats(@PathVariable Long id) {
+        // Obtener la reserva
+        Reserva reserva = reservaService.obtenerReservaPorId(id);
+
+        // Verificar que se encontró la reserva y obtener el hotel asociado
+        Hotel hotel = reserva.getHotel();
+        if (hotel == null) {
+            return "Error: No se ha encontrado el hotel asociado a la reserva.";
+        }
+
+        double lat = hotel.getLat();
+        double lng = hotel.getLng();
+        int radius = 15000; // Radio en metros
+
+        List<String> keywords = Arrays.asList(
+                "golf",
+                "senderismo",
+                "restaurantes",
+                "enoturismo",
+                "cuevas de arta",
+                "cuevas",
+                "playas",
+                "rutas de ciclismo",
+                "actividades náuticas",
+                "birdwatching",
+                "parque natural Es Trenc",
+                "parque natural albufera",
+                "museos",
+                "montañas"
+        );
+
+        RestTemplate rest = new RestTemplate();
+
+        for (String keyword : keywords) {
+            String url = UriComponentsBuilder
+                    .fromHttpUrl("https://maps.googleapis.com/maps/api/place/nearbysearch/json")
+                    .queryParam("location", lat + "," + lng)
+                    .queryParam("radius", radius)
+                    .queryParam("keyword", keyword)
+                    .queryParam("key", apiKey)
+                    .toUriString();
+
+            try {
+                var response = rest.getForObject(url, Map.class);
+                List<Map<String, Object>> results = (List<Map<String, Object>>) response.get("results");
+
+                if (results == null) continue;
+
+                results.forEach(place -> {
+                    Map<String, Object> location = (Map<String, Object>) ((Map<String, Object>) place.get("geometry")).get("location");
+
+                    String nom = (String) place.get("name");
+                    double latAct = (Double) location.get("lat");
+                    double lngAct = (Double) location.get("lng");
+
+                    // Verificar si ya existe una actividad con el mismo nombre y coordenadas
+                    Activitat activitat = activitatService.findByNomAndLatLng(nom, latAct, lngAct)
+                            .orElseGet(() -> {
+                                // Crear nueva actividad si no existe
+                                Activitat nueva = new Activitat();
+                                nueva.setNom(nom);
+                                nueva.setTipus(keyword);
+                                nueva.setLat_activitat(latAct);
+                                nueva.setLng_activitat(lngAct);
+                                nueva.setDescripcio((String) place.get("vicinity"));
+                                return activitatRepo.save(nueva);
+                            });
+
+                    // Verificar que el hotel y la actividad tienen IDs válidos antes de insertar la relación
+                    if (hotel.getId() != null && activitat.getId() != null) {
+                        // Comprobar si la relación ya existe antes de guardarla
+                        boolean exists = hotelActivitatRepo.existsByHotelIdAndActivitatId(hotel.getId(), activitat.getId());
+                        if (!exists) {
+                            HotelActivitat relacion = new HotelActivitat();
+                            relacion.setHotelId(hotel.getId());
+                            relacion.setActivitatId(activitat.getId());
+                            hotelActivitatRepo.save(relacion);
+                            System.out.println("Relación insertada: Hotel ID = " + hotel.getId() + ", Actividad ID = " + activitat.getId());
+                        }
+                    } else {
+                        System.out.println("Error: El hotel o la actividad no tienen ID válido.");
+                    }
+                });
+
+            } catch (Exception e) {
+                System.out.println("Error obteniendo actividades para keyword '" + keyword + "': " + e.getMessage());
+            }
+        }
+
+        return "Activitats carregades per a l'hotel: " + hotel.getName();
+    }
+
+    @GetMapping("/{id}/activitats")
+    public ResponseEntity<List<Activitat>> obtenirActivitatsReserva(@PathVariable Long id) {
+        List<Activitat> activitats = reservaService.getActivitatsByReservaId(id);
+        return ResponseEntity.ok(activitats);
+    }
+
 }
 

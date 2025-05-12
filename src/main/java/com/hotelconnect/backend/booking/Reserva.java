@@ -1,6 +1,6 @@
 package com.hotelconnect.backend.booking;
 
-import com.hotelconnect.backend.Hotel;
+import com.hotelconnect.backend.hotels.Hotel;
 import com.hotelconnect.backend.users.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -49,4 +49,5 @@ import java.util.Date;
         @UpdateTimestamp
         @Column(name = "updated_at")
         private Date updatedAt;
-}
+
+    }

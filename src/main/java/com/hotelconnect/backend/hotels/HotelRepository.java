@@ -1,4 +1,4 @@
-package com.hotelconnect.backend;
+package com.hotelconnect.backend.hotels;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
