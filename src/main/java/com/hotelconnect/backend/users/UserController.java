@@ -1,5 +1,6 @@
 package com.hotelconnect.backend.users;
 
+import com.hotelconnect.backend.hotels.Hotel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,27 +11,33 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
 public class UserController {
 
     @Autowired
     private UserService userService;
 
+    // Autentificació
     // Metodo para registrar un nuevo usuario
     @PostMapping("/register")
     public ResponseEntity<Map<String, Object>> registerUser(@RequestBody User user) {
-        // Llamamos al servicio para registrar el usuario
-        Map<String, Object> registerResponse = userService.registerUser(user);
+        Map<String, Object> response = new HashMap<>();
 
-        // Si el registro fue exitoso, retornamos un status 200 (OK) con el mensaje
-        if ((boolean) registerResponse.get("success")) {
-            return ResponseEntity.ok(registerResponse);
-        } else {
-            // Si el correo ya está registrado, retornamos un status 400 (BAD_REQUEST) con el mensaje
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(registerResponse);
+        if (userService.emailExists(user.getEmail())) {
+            response.put("status", "error");
+            response.put("message", "El correo ya está registrado.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
+
+        // 🔐 Encriptar y guardar usuario
+        userService.save(user);
+
+        response.put("status", "success");
+        response.put("message", "Usuario registrado con éxito");
+        return ResponseEntity.ok(response);
     }
+
 
     // Metodo de login
     @PostMapping("/login")
@@ -65,8 +72,7 @@ public class UserController {
         }
     }
 
-
-
+    // CRUD
     @GetMapping("/")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
@@ -97,6 +103,7 @@ public class UserController {
         userService.deleteUser(id);
     }
 
+    // Pagaments
     @PutMapping("/{id}/pay")
     public ResponseEntity<?> pay(@PathVariable int id, @RequestBody Map<String, Double> request) {
         try {
@@ -108,6 +115,45 @@ public class UserController {
         }
     }
 
+    // Favoritos
+    // AÑADIR FAVORITO
+    @PostMapping("/{id}/favorits/{hotelId}")
+    public ResponseEntity<Map<String, String>> afegirFavorit(@PathVariable Integer id, @PathVariable Integer hotelId) {
+        try {
+            userService.afegirFavorit(id, hotelId);
+            return ResponseEntity.ok(Map.of("message", "Hotel afegit a favorits correctament"));
+        } catch (IllegalStateException e) {
+            // ⚠️ No devolver error, sino éxito con mensaje informativo
+            return ResponseEntity.ok(Map.of("message", "Aquest hotel ja està als teus favorits"));
+        } catch (Exception e) {
+            // Només en errors realment inesperats retornam 400
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Error inesperat"));
+        }
+    }
+
+    // ELIMINAR FAVORITO
+    @DeleteMapping("/{id}/favorits/{hotelId}")
+    public ResponseEntity<Map<String, String>> eliminarFavorit(@PathVariable Integer id, @PathVariable Integer hotelId) {
+        try {
+            userService.eliminarFavorit(id, hotelId);
+            return ResponseEntity.ok(Map.of("message", "Hotel eliminado de favoritos correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("message", "Error al eliminar el hotel de favoritos"));
+        }
+    }
+
+
+    // Listar los favoritos de un usuario
+    @GetMapping("/{id}/favorits")
+    public ResponseEntity<List<Hotel>> llistarFavorits(@PathVariable Integer id) {
+        try {
+            List<Hotel> favoritos = userService.obtenirFavorits(id);
+            return ResponseEntity.ok(favoritos);
+        } catch (Exception ex) {
+            ex.printStackTrace();  // Muestra el error detallado en la consola
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
 }
 
 

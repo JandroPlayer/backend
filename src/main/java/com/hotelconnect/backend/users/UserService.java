@@ -1,14 +1,14 @@
 package com.hotelconnect.backend.users;
 
+import com.hotelconnect.backend.hotels.Hotel;
+import com.hotelconnect.backend.hotels.HotelRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -16,29 +16,21 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private HotelRepository hotelRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Map<String, Object> registerUser(User user) {
-        Map<String, Object> response = new HashMap<>();
+    // Mètodes per al registre
+    public boolean emailExists(String email) {
+        return userRepository.existsByEmail(email);
+    }
 
-        if (userRepository.existsByEmail(user.getEmail())) {
-            response.put("success", false);
-            response.put("message", "El correo ya está registrado");
-            return response;
-        }
-
-        // 🔐 Encriptar la contraseña antes de guardar
+    public void save(User user) {
         String hashedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashedPassword);
-
-        // Guardar el usuario en la base de datos
         userRepository.save(user);
-
-        response.put("success", true);
-        response.put("message", "Usuario registrado con éxito");
-        return response;
     }
 
     // Metodo modificado para el login
@@ -108,6 +100,40 @@ public class UserService {
         } else {
             throw new RuntimeException("Saldo insuficiente");
         }
+    }
+
+    // Favorits
+    @Transactional
+    public void afegirFavorit(Integer userId, Integer hotelId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuari no trobat"));
+
+        Hotel hotel = hotelRepository.findById(Long.valueOf(hotelId))
+                .orElseThrow(() -> new RuntimeException("Hotel no trobat"));
+
+        // Comprobar si ya es favorito
+        if (user.getHotelsFavorits().contains(hotel)) {
+            throw new IllegalStateException("Aquest hotel ja és als favorits de l'usuari.");
+        }
+
+        user.getHotelsFavorits().add(hotel);
+        userRepository.save(user);
+    }
+
+    public void eliminarFavorit(Integer userId, Integer hotelId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuari no trobat"));
+        Hotel hotel = hotelRepository.findById(Long.valueOf(hotelId))
+                .orElseThrow(() -> new RuntimeException("Hotel no trobat"));
+
+        user.getHotelsFavorits().remove(hotel);
+        userRepository.save(user);
+    }
+
+    public List<Hotel> obtenirFavorits(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        return user.getHotelsFavorits();
     }
 }
 

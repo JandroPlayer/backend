@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -23,6 +24,7 @@ public class ReservaAutobusController {
 
     @Autowired
     private UserRepository userRepository;
+
     @Autowired
     private ReservaAutobusRepository reservaAutobusRepository;
 
@@ -88,8 +90,9 @@ public class ReservaAutobusController {
 
     // Eliminar una reserva de autobús por ID
     @DeleteMapping("/{id}")
-    public void deleteReserva(@PathVariable Long id) {
-        reservaAutobusService.deleteReserva(id);
+    public ResponseEntity<?> deleteReserva(@PathVariable Long id) {
+        String mensaje = reservaAutobusService.deleteReservaConRespuesta(id);
+        return ResponseEntity.ok(Map.of("message", mensaje));
     }
 
     @PutMapping("/{reservaId}/pagar")
@@ -107,6 +110,5 @@ public class ReservaAutobusController {
             return ResponseEntity.notFound().build();
         }
     }
-
 }
 
