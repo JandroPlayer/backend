@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 public class Autobusos extends VehiclesElectrics {
     @Column(name = "capacitatpassatgers")
     private int capacitatPassatgers;
-    @Column(name = "numparadesassignades")
-    private int numParadesAssignades;
+    @Column(name = "preu_per_persona")
+    private Double preuPerPersona;
 }
 

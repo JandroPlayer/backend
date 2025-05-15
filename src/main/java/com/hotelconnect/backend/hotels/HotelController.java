@@ -72,18 +72,5 @@ public class HotelController {
 
         return respuesta;
     }
-
-
-    @PostMapping("/actualitzar-imgs")
-    public Map<String, Object> actualitzarImatges() {
-        List<String> actualitzats = hotelService.actualitzarTotesLesImatges();
-
-        Map<String, Object> resposta = new HashMap<>();
-        resposta.put("missatge", "🖼️ Imatges actualitzades: " + actualitzats.size());
-        resposta.put("hotels", actualitzats);
-
-        return resposta;
-    }
-
 }
 

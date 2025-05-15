@@ -35,5 +35,13 @@ public class VehiclesElectricsService {
                 .map(v -> (Autobusos) v)
                 .collect(Collectors.toList());
     }
+
+    // 🔽 Mètode per filtrar només autobusos
+    public List<Taxis> findAllTaxis() {
+        return repository.findAll().stream()
+                .filter(v -> v instanceof Taxis)
+                .map(v -> (Taxis) v)
+                .collect(Collectors.toList());
+    }
 }
 

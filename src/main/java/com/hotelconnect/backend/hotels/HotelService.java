@@ -7,9 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -136,53 +133,6 @@ public class HotelService {
 
         return actualizados;
     }
-
-
-    public String obtenirImageFinalURL(String photoReference) {
-        try {
-            String url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=" + photoReference + "&key=" + googleApiKey;
-
-            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-            connection.setInstanceFollowRedirects(false);
-
-            connection.connect();
-            String location = connection.getHeaderField("Location");
-
-            connection.disconnect();
-
-            return location; // Aquesta és la URL final d'imatge
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
-
-    public List<String> actualitzarTotesLesImatges() {
-        List<String> nomsActualitzats = new ArrayList<>();
-        List<Hotel> hotels = hotelRepository.findAll();
-
-        for (Hotel hotel : hotels) {
-            String imageUrl = hotel.getImageUrl();
-            if (imageUrl != null && imageUrl.contains("photo_reference=")) {
-                try {
-                    String photoRef = imageUrl.split("photo_reference=")[1].split("&")[0];
-                    String urlFinal = obtenirImageFinalURL(photoRef);
-
-                    if (urlFinal != null && !urlFinal.equals(imageUrl)) {
-                        hotel.setImageUrl(urlFinal);
-                        hotelRepository.save(hotel);
-                        nomsActualitzats.add(hotel.getName());
-                    }
-                } catch (Exception e) {
-                    System.err.println("⚠️ Error amb l'hotel: " + hotel.getName() + " - " + e.getMessage());
-                }
-            }
-        }
-
-        return nomsActualitzats;
-    }
-
 }
 
 

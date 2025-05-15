@@ -39,5 +39,10 @@ public class VehiclesElectricsController {
         return service.findAllAutobusos(); // implementa-ho al servei
     }
 
+    @GetMapping("/taxis")
+    public List<Taxis> getTaxis() {
+        return service.findAllTaxis();
+    }
+
 }
 

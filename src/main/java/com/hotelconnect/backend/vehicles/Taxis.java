@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 public class Taxis extends VehiclesElectrics {
     @Column(name = "numllicencia")
     private String numLlicencia;
-    @Column(name = "conductorassignat")
-    private String conductorAssignat;
-
-    // Getters y setters
+    @Column(name = "tarifabase", nullable = false)
+    private double tarifaBase;
+    @Column(name = "costperkm", nullable = false)
+    private double costPerKm;
 }
 
