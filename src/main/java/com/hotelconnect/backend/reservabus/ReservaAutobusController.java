@@ -82,10 +82,8 @@ public class ReservaAutobusController {
 
     // Obtener todas las reservas de un usuario
     @GetMapping("/user/{userId}")
-    public List<ReservaAutobus> getReservasByUser(@PathVariable Long userId) {
-        User user = new User();
-        user.setId(Math.toIntExact(userId));  // Establecer el ID del usuario, puedes buscar al usuario en la base de datos si es necesario
-        return reservaAutobusService.getReservasByUser(user);
+    public List<ReservaAutobus> obtenerReservasPorUsuario(@PathVariable Integer userId) {
+        return reservaAutobusService.getReservasByUser(userId);
     }
 
     // Eliminar una reserva de autobús por ID

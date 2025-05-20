@@ -39,8 +39,8 @@ public class ReservaAutobusService {
     }
 
     // Obtener todas las reservas de un usuario específico
-    public List<ReservaAutobus> getReservasByUser(User user) {
-        return reservaAutobusRepository.findAll();  // Puedes personalizar la consulta si lo necesitas
+    public List<ReservaAutobus> getReservasByUser(Integer user) {
+        return reservaAutobusRepository.findByUserId(user);  // Puedes personalizar la consulta si lo necesitas
     }
 
     // Eliminar una reserva de autobús por su ID y reembolsar
