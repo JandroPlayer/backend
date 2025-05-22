@@ -1,6 +1,7 @@
 package com.hotelconnect.backend.reservataxi;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.hotelconnect.backend.logica.Reservable;
 import com.hotelconnect.backend.users.User;
 import com.hotelconnect.backend.vehicles.Taxis;
 import jakarta.persistence.*;
@@ -18,7 +19,7 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "reservas_taxis")
-public class ReservaTaxi {
+public class ReservaTaxi implements Reservable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

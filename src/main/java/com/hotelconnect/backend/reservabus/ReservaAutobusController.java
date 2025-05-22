@@ -1,5 +1,6 @@
 package com.hotelconnect.backend.reservabus;
 
+import com.hotelconnect.backend.logica.Logica;
 import com.hotelconnect.backend.users.User;
 import com.hotelconnect.backend.users.UserRepository;
 import com.hotelconnect.backend.vehicles.Autobusos;
@@ -24,13 +25,15 @@ public class ReservaAutobusController {
 
     @Autowired
     private UserRepository userRepository;
+    private final Logica logica;
 
     @Autowired
     private ReservaAutobusRepository reservaAutobusRepository;
 
     @Autowired
-    public ReservaAutobusController(ReservaAutobusService reservaAutobusService) {
+    public ReservaAutobusController(ReservaAutobusService reservaAutobusService, Logica logica) {
         this.reservaAutobusService = reservaAutobusService;
+        this.logica = logica;
     }
 
     // Crear una nueva reserva de autobús
@@ -89,23 +92,17 @@ public class ReservaAutobusController {
     // Eliminar una reserva de autobús por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReserva(@PathVariable Long id) {
-        String mensaje = reservaAutobusService.deleteReservaConRespuesta(id);
+        String mensaje = reservaAutobusService.deleteReservaAutobus(id);
         return ResponseEntity.ok(Map.of("message", mensaje));
     }
 
     @PutMapping("/{reservaId}/pagar")
-    public ResponseEntity<ReservaAutobus> pagarReserva(@PathVariable Long reservaId) {
-        Optional<ReservaAutobus> reservaOpt = reservaAutobusRepository.findById(reservaId);
-        if (reservaOpt.isPresent()) {
-            ReservaAutobus reserva = reservaOpt.get();
-            if (reserva.isPagada()) {
-                return ResponseEntity.badRequest().build(); // No mensaje
-            }
-            reserva.setPagada(true);
-            reservaAutobusRepository.save(reserva);
-            return ResponseEntity.ok(reserva); // Devuelve el objeto como JSON
-        } else {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> pagarReserva(@PathVariable Long reservaId) {
+        try {
+            var reserva = logica.pagarReserva(reservaAutobusRepository, reservaId);
+            return ResponseEntity.ok(reserva);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

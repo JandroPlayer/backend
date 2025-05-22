@@ -19,6 +19,8 @@ public class HotelDTO {
     private String website;
     private String googleMapsUrl;
     private String imageUrl;
+    private Double pricePerNight;
+    private Integer availableRooms;
 
     public HotelDTO(Hotel hotel) {
         this.id = hotel.getId();
@@ -32,6 +34,8 @@ public class HotelDTO {
         this.website = hotel.getWebsite();
         this.googleMapsUrl = hotel.getGoogleMapsUrl();
         this.imageUrl = hotel.getImageUrl();
+        this.pricePerNight = hotel.getPricePerNight();
+        this.availableRooms = hotel.getAvailableRooms();
     }
 
 }

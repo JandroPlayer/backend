@@ -1,6 +1,7 @@
 package com.hotelconnect.backend.booking;
 
 import com.hotelconnect.backend.hotels.Hotel;
+import com.hotelconnect.backend.logica.Reservable;
 import com.hotelconnect.backend.users.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,7 @@ import java.util.Date;
     @Data
     @Entity
     @Table(name = "reservas")
-    public class Reserva {
+    public class Reserva implements Reservable {
 
         @Id
         @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -50,4 +51,7 @@ import java.util.Date;
         @Column(name = "updated_at")
         private Date updatedAt;
 
+        @Column(nullable = false)
+        private double preu;
+        private boolean pagada = false;
     }

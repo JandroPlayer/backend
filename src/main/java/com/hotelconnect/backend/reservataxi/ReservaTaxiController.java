@@ -1,11 +1,13 @@
 package com.hotelconnect.backend.reservataxi;
 
+import com.hotelconnect.backend.logica.Logica;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/reservas-taxis")
@@ -14,6 +16,8 @@ import java.util.List;
 public class ReservaTaxiController {
 
     private final ReservaTaxiService reservaTaxiService;
+    private final ReservaTaxiRepository reservaTaxiRepository;
+    private final Logica logica;
 
     @GetMapping
     public List<ReservaTaxi> getAll() {
@@ -38,13 +42,11 @@ public class ReservaTaxiController {
         return reservaTaxiService.save(reservaTaxi);
     }
 
+    // Eliminar una reserva de autobús por ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        if (reservaTaxiService.findById(id).isPresent()) {
-            reservaTaxiService.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteReserva(@PathVariable Long id) {
+        String mensaje = reservaTaxiService.deleteReservaTaxi(id);
+        return ResponseEntity.ok(Map.of("message", mensaje));
     }
 
     @PostMapping("/user/{userId}/taxi/{taxiId}")
@@ -55,6 +57,16 @@ public class ReservaTaxiController {
 
         ReservaTaxi reserva = reservaTaxiService.crearReserva(userId, taxiId, reservaRequest);
         return ResponseEntity.status(HttpStatus.CREATED).body(reserva);
+    }
+
+    @PutMapping("/{reservaId}/pagar")
+    public ResponseEntity<?> pagarReserva(@PathVariable Long reservaId) {
+        try {
+            var reserva = logica.pagarReserva(reservaTaxiRepository, reservaId);
+            return ResponseEntity.ok(reserva);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }
 

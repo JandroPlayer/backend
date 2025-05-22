@@ -35,6 +35,10 @@ public class Hotel {
     private String googleMapsUrl;
     @Column(length = 1000)
     private String imageUrl;
+    @Column(name = "price_per_night")
+    private Double pricePerNight;
+    @Column(name = "available_rooms")
+    private Integer availableRooms;
 
     @ManyToMany
     @JoinTable(

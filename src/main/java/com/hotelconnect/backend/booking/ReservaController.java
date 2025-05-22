@@ -3,6 +3,7 @@ package com.hotelconnect.backend.booking;
 import com.hotelconnect.backend.activitats.*;
 import com.hotelconnect.backend.hotels.Hotel;
 import com.hotelconnect.backend.hotels.HotelRepository;
+import com.hotelconnect.backend.logica.Logica;
 import com.hotelconnect.backend.users.User;
 import com.hotelconnect.backend.users.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,10 @@ public class ReservaController {
     private final ReservaService reservaService;
 
     @Autowired
+    private ReservaRepository reservaRepository;
+    private final Logica logica;
+
+    @Autowired
     private ActivitatRepository activitatRepo;
 
     @Autowired
@@ -39,8 +44,9 @@ public class ReservaController {
     private ActivitatService activitatService;
 
     @Autowired
-    public ReservaController(ReservaService reservaService) {
+    public ReservaController(ReservaService reservaService, Logica logica) {
         this.reservaService = reservaService;
+        this.logica = logica;
     }
 
     @Autowired
@@ -196,6 +202,22 @@ public class ReservaController {
     public ResponseEntity<List<Activitat>> obtenirActivitatsReserva(@PathVariable Long id) {
         List<Activitat> activitats = reservaService.getActivitatsByReservaId(id);
         return ResponseEntity.ok(activitats);
+    }
+
+    @PutMapping("/{reservaId}/pagar")
+    public ResponseEntity<?> pagarReserva(@PathVariable Long reservaId) {
+        try {
+            var reserva = logica.pagarReserva(reservaRepository, reservaId);
+            return ResponseEntity.ok(reserva);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteReserva(@PathVariable Long id) {
+        String mensaje = reservaService.deleteReservaHotel(id);
+        return ResponseEntity.ok(Map.of("message", mensaje));
     }
 
 }

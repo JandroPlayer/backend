@@ -72,5 +72,17 @@ public class HotelController {
 
         return respuesta;
     }
+
+    // En HotelController.java
+    @PutMapping("/{id}/update-available-rooms")
+    public ResponseEntity<?> updateAvailableRooms(@PathVariable Long id, @RequestParam int roomsBooked) {
+        try {
+            hotelService.disminuirHabitacionsDisponibles(id, roomsBooked);
+            return ResponseEntity.ok().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
 }
 

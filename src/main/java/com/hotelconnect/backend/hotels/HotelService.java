@@ -2,6 +2,7 @@ package com.hotelconnect.backend.hotels;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 @Service
 public class HotelService {
@@ -61,6 +63,7 @@ public class HotelService {
     private String googleApiKey;
 
     public List<String> importarHotelesDesdeGoogle() throws Exception {
+        Random random = new Random();
         String searchUrl = "https://maps.googleapis.com/maps/api/place/textsearch/json?query=agroturismo+hotel+mallorca&key=" + googleApiKey;
         JsonNode response = mapper.readTree(restTemplate.getForObject(searchUrl, String.class));
 
@@ -92,6 +95,10 @@ public class HotelService {
                             + photoReference + "&key=" + googleApiKey;
                     hotel.setImageUrl(imageUrl);
                 }
+
+                // Simular price_per_night y available_rooms
+                hotel.setPricePerNight(50 + random.nextDouble() * 150);  // Entre 50 y 200 €
+                hotel.setAvailableRooms(5 + random.nextInt(30));  // Entre 5 y 35 habitaciones
 
                 hotelRepository.save(hotel);
                 insertados.add(hotel.getName());
@@ -133,6 +140,22 @@ public class HotelService {
 
         return actualizados;
     }
+
+    // En HotelService.java
+    @Transactional
+    public void disminuirHabitacionsDisponibles(Long hotelId, int roomsBooked) {
+        Hotel hotel = hotelRepository.findById(hotelId)
+                .orElseThrow(() -> new RuntimeException("Hotel no encontrado"));
+
+        int habitacionesDisponibles = hotel.getAvailableRooms();
+        if (roomsBooked > habitacionesDisponibles) {
+            throw new RuntimeException("No hay suficientes habitaciones disponibles");
+        }
+
+        hotel.setAvailableRooms(habitacionesDisponibles - roomsBooked);
+        hotelRepository.save(hotel);
+    }
+
 }
 
 
