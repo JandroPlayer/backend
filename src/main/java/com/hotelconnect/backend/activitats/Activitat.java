@@ -3,10 +3,14 @@ package com.hotelconnect.backend.activitats;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hotelconnect.backend.hotels.Hotel;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 @Entity
 @Table(name = "activitats")
@@ -27,6 +31,4 @@ public class Activitat {
     @ManyToMany(mappedBy = "activitats")
     @JsonIgnore
     private List<Hotel> hotels;
-
-
 }

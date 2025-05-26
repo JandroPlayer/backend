@@ -6,6 +6,12 @@ import com.hotelconnect.backend.hotels.HotelRepository;
 import com.hotelconnect.backend.logica.Logica;
 import com.hotelconnect.backend.users.User;
 import com.hotelconnect.backend.users.UserRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -17,10 +23,17 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
+/**
+ * Controlador REST per gestionar les reserves d'hotels.
+ * Proporciona operacions per crear, obtenir, pagar i eliminar reserves,
+ * així com per carregar activitats relacionades amb una reserva.
+ */
 @RestController
 @RequestMapping("/api/reservas")
 @CrossOrigin(origins = "*")
+@Tag(name = "Reserves", description = "API per gestionar les reserves d'hotels")
 public class ReservaController {
 
     @Autowired
@@ -30,6 +43,7 @@ public class ReservaController {
 
     @Autowired
     private ReservaRepository reservaRepository;
+
     private final Logica logica;
 
     @Autowired
@@ -40,8 +54,12 @@ public class ReservaController {
 
     @Value("${google.api.key}")
     private String apiKey;
+
     @Autowired
     private ActivitatService activitatService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     public ReservaController(ReservaService reservaService, Logica logica) {
@@ -49,12 +67,21 @@ public class ReservaController {
         this.logica = logica;
     }
 
-    @Autowired
-    private UserRepository userRepository;
-
+    /**
+     * Crea una nova reserva.
+     *
+     * @param reserva La reserva a crear amb hotel i usuari especificats.
+     * @return La reserva creada.
+     * @throws RuntimeException Si no es troba l'hotel o l'usuari indicats.
+     */
+    @Operation(summary = "Crear reserva", description = "Crea una nova reserva per un usuari i hotel donats")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Reserva creada correctament",
+                    content = @Content(schema = @Schema(implementation = Reserva.class))),
+            @ApiResponse(responseCode = "400", description = "Error en dades d'entrada")
+    })
     @PostMapping
     public Reserva createReserva(@RequestBody Reserva reserva) {
-        // Buscar el hotel por ID
         if (reserva.getHotel() != null && reserva.getHotel().getId() != null) {
             Hotel hotel = hotelRepository.findById(reserva.getHotel().getId())
                     .orElseThrow(() -> new RuntimeException("Hotel no encontrado"));
@@ -63,7 +90,6 @@ public class ReservaController {
             throw new RuntimeException("El hotel no puede ser nulo");
         }
 
-        // Buscar el usuario por ID
         if (reserva.getUser() != null && reserva.getUser().getId() != null) {
             User user = userRepository.findById(reserva.getUser().getId())
                     .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -72,18 +98,28 @@ public class ReservaController {
             throw new RuntimeException("El usuario no puede ser nulo");
         }
 
-        System.out.println("Reserva recibida: " + reserva);
         return reservaService.crearReserva(reserva);
     }
 
-    // Obtener todas las reservas
+    /**
+     * Obté totes les reserves.
+     *
+     * @return Llista amb totes les reserves.
+     */
+    @Operation(summary = "Obtenir totes les reserves")
     @GetMapping
     public ResponseEntity<List<Reserva>> obtenerReservas() {
         List<Reserva> reservas = reservaService.obtenerReservas();
         return new ResponseEntity<>(reservas, HttpStatus.OK);
     }
 
-    // Obtener una reserva por ID
+    /**
+     * Obté una reserva per ID.
+     *
+     * @param id ID de la reserva.
+     * @return Reserva trobada o NOT FOUND si no existeix.
+     */
+    @Operation(summary = "Obtenir reserva per ID")
     @GetMapping("/{id}")
     public ResponseEntity<Reserva> obtenerReservaPorId(@PathVariable Long id) {
         Reserva reserva = reservaService.obtenerReservaPorId(id);
@@ -93,24 +129,40 @@ public class ReservaController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Obté les reserves associades a un hotel.
+     *
+     * @param hotelId ID de l'hotel.
+     * @return Llista de reserves de l'hotel.
+     */
+    @Operation(summary = "Obtenir reserves per hotel")
     @GetMapping("/hotel/{hotelId}")
     public List<Reserva> getReservasByHotel(@PathVariable Long hotelId) {
         return reservaService.getReservasByHotel(hotelId);
     }
 
-    // 🔥 Nuevo endpoint: reservas por usuario
+    /**
+     * Obté les reserves d'un usuari.
+     *
+     * @param userId ID de l'usuari.
+     * @return Llista de reserves de l'usuari.
+     */
+    @Operation(summary = "Obtenir reserves per usuari")
     @GetMapping("/usuario/{userId}")
     public List<Reserva> obtenerReservasPorUsuario(@PathVariable Integer userId) {
         return reservaService.getReservasByUser(userId);
     }
 
-    // Activitats
+    /**
+     * Carrega activitats properes a l'hotel d'una reserva i les desa a la base de dades.
+     *
+     * @param id ID de la reserva.
+     * @return Missatge d'èxit o error.
+     */
+    @Operation(summary = "Carregar activitats per reserva")
     @GetMapping("/{id}/activitats/load")
     public String carregarActivitats(@PathVariable Long id) {
-        // Obtener la reserva
         Reserva reserva = reservaService.obtenerReservaPorId(id);
-
-        // Verificar que se encontró la reserva y obtener el hotel asociado
         Hotel hotel = reserva.getHotel();
         if (hotel == null) {
             return "Error: No se ha encontrado el hotel asociado a la reserva.";
@@ -118,7 +170,7 @@ public class ReservaController {
 
         double lat = hotel.getLat();
         double lng = hotel.getLng();
-        int radius = 15000; // Radio en metros
+        int radius = 15000;
 
         List<String> keywords = Arrays.asList(
                 "golf",
@@ -161,10 +213,8 @@ public class ReservaController {
                     double latAct = (Double) location.get("lat");
                     double lngAct = (Double) location.get("lng");
 
-                    // Verificar si ya existe una actividad con el mismo nombre y coordenadas
                     Activitat activitat = activitatService.findByNomAndLatLng(nom, latAct, lngAct)
                             .orElseGet(() -> {
-                                // Crear nueva actividad si no existe
                                 Activitat nueva = new Activitat();
                                 nueva.setNom(nom);
                                 nueva.setTipus(keyword);
@@ -174,19 +224,14 @@ public class ReservaController {
                                 return activitatRepo.save(nueva);
                             });
 
-                    // Verificar que el hotel y la actividad tienen IDs válidos antes de insertar la relación
                     if (hotel.getId() != null && activitat.getId() != null) {
-                        // Comprobar si la relación ya existe antes de guardarla
                         boolean exists = hotelActivitatRepo.existsByHotelIdAndActivitatId(hotel.getId(), activitat.getId());
                         if (!exists) {
                             HotelActivitat relacion = new HotelActivitat();
                             relacion.setHotelId(hotel.getId());
                             relacion.setActivitatId(activitat.getId());
                             hotelActivitatRepo.save(relacion);
-                            System.out.println("Relación insertada: Hotel ID = " + hotel.getId() + ", Actividad ID = " + activitat.getId());
                         }
-                    } else {
-                        System.out.println("Error: El hotel o la actividad no tienen ID válido.");
                     }
                 });
 
@@ -198,26 +243,53 @@ public class ReservaController {
         return "Activitats carregades per a l'hotel: " + hotel.getName();
     }
 
+    /**
+     * Obté les activitats associades a una reserva.
+     *
+     * @param id ID de la reserva.
+     * @return Llista d'activitats.
+     */
+    @Operation(summary = "Obtenir activitats per reserva")
     @GetMapping("/{id}/activitats")
     public ResponseEntity<List<Activitat>> obtenirActivitatsReserva(@PathVariable Long id) {
         List<Activitat> activitats = reservaService.getActivitatsByReservaId(id);
         return ResponseEntity.ok(activitats);
     }
 
+    /**
+     * Marca una reserva com a pagada.
+     *
+     * @param reservaId ID de la reserva.
+     * @return Reserva actualitzada o missatge d'error.
+     */
     @PutMapping("/{reservaId}/pagar")
     public ResponseEntity<?> pagarReserva(@PathVariable Long reservaId) {
         try {
             var reserva = logica.pagarReserva(reservaRepository, reservaId);
             return ResponseEntity.ok(reserva);
         } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error inesperat en pagar la reserva."));
         }
     }
 
+    /**
+     * Elimina una reserva pel seu ID.
+     *
+     * @param id ID de la reserva.
+     * @return Missatge de confirmació.
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReserva(@PathVariable Long id) {
-        String mensaje = reservaService.deleteReservaHotel(id);
-        return ResponseEntity.ok(Map.of("message", mensaje));
+        try {
+            String missatge = reservaService.deleteReservaHotel(id);
+            return ResponseEntity.ok(Map.of("message", missatge));
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Error inesperat en eliminar la reserva."));
+        }
     }
 
 }
