@@ -46,6 +46,15 @@ public class ReservaService {
         return reservaRepository.findById(id).orElse(null);
     }
 
+    // Actualizar ReservaHotel
+    public Reserva updateReservaHotel(Long id, Reserva reservaHotel) {
+        if (!reservaRepository.existsById(id)) {
+            throw new IllegalArgumentException("ReservaHotel no encontrada.");
+        }
+        reservaHotel.setId(id); // mantener el mismo ID
+        return reservaRepository.save(reservaHotel);
+    }
+
     public List<Reserva> getReservasByHotel(Long hotelId) {
         return reservaRepository.findByHotelId(hotelId);
     }

@@ -44,6 +44,9 @@ public class User {
     @JsonIgnore
     private List<Hotel> hotelsFavorits = new ArrayList<>();
 
+    @Column(name = "is_admin", nullable = false)
+    private boolean isAdmin = false;
+
     // toString personalizado para evitar StackOverflowError
     @Override
     public String toString() {

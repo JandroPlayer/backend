@@ -274,6 +274,16 @@ public class ReservaController {
         }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<Reserva> updateReservaHotel(@PathVariable Long id, @RequestBody Reserva reservaHotel) {
+        try {
+            Reserva updated = reservaService.updateReservaHotel(id, reservaHotel);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     /**
      * Elimina una reserva pel seu ID.
      *

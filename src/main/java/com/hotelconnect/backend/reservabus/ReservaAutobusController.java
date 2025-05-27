@@ -1,5 +1,6 @@
 package com.hotelconnect.backend.reservabus;
 
+import com.hotelconnect.backend.booking.Reserva;
 import com.hotelconnect.backend.logica.Logica;
 import com.hotelconnect.backend.users.User;
 import com.hotelconnect.backend.users.UserRepository;
@@ -87,6 +88,16 @@ public class ReservaAutobusController {
     @GetMapping("/user/{userId}")
     public List<ReservaAutobus> obtenerReservasPorUsuario(@PathVariable Integer userId) {
         return reservaAutobusService.getReservasByUser(userId);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ReservaAutobus> updateReservaHotel(@PathVariable Long id, @RequestBody ReservaAutobus reservaAutobus) {
+        try {
+            ReservaAutobus updated = reservaAutobusService.updateReservaAutobus(id, reservaAutobus);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     // Eliminar una reserva de autobús por ID

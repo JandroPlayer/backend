@@ -58,7 +58,8 @@ public class UserController {
                 userResponse.put("name", loggedInUser.getName());
                 userResponse.put("email", loggedInUser.getEmail());
                 userResponse.put("createdAt", loggedInUser.getCreatedAt());
-                userResponse.put("img", loggedInUser.getImg());  // Suponiendo que el usuario tiene una imagen
+                userResponse.put("img", loggedInUser.getImg());
+                userResponse.put("isadmin", loggedInUser.isAdmin());
 
                 // Puedes agregar más campos según sea necesario
                 return ResponseEntity.ok(userResponse);

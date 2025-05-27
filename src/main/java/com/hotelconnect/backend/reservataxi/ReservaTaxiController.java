@@ -42,6 +42,16 @@ public class ReservaTaxiController {
         return reservaTaxiService.save(reservaTaxi);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ReservaTaxi> updateReservaTaxi(@PathVariable Long id, @RequestBody ReservaTaxi reservaTaxi) {
+        try {
+            ReservaTaxi updated = reservaTaxiService.updateReservaTaxi(id, reservaTaxi);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
     // Eliminar una reserva de autobús por ID
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteReserva(@PathVariable Long id) {

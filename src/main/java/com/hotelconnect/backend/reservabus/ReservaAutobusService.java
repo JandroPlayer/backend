@@ -1,5 +1,6 @@
 package com.hotelconnect.backend.reservabus;
 
+import com.hotelconnect.backend.booking.Reserva;
 import com.hotelconnect.backend.logica.Logica;
 import com.hotelconnect.backend.users.UserRepository;
 import jakarta.annotation.PostConstruct;
@@ -46,6 +47,15 @@ public class ReservaAutobusService {
     // Obtener todas las reservas de un usuario específico
     public List<ReservaAutobus> getReservasByUser(Integer user) {
         return reservaAutobusRepository.findByUserId(user);  // Puedes personalizar la consulta si lo necesitas
+    }
+
+    // Actualizar ReservaHotel
+    public ReservaAutobus updateReservaAutobus(Long id, ReservaAutobus reservaAutobus) {
+        if (!reservaAutobusRepository.existsById(id)) {
+            throw new IllegalArgumentException("ReservaAutobus no encontrada.");
+        }
+        reservaAutobus.setId(id); // mantener el mismo ID
+        return reservaAutobusRepository.save(reservaAutobus);
     }
 
     // Eliminar una reserva de autobús por su ID y reembolsar

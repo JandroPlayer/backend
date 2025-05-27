@@ -60,6 +60,15 @@ public class ReservaTaxiService {
         return reservaTaxiRepository.save(reservaRequest);
     }
 
+    // Actualizar ReservaTaxi
+    public ReservaTaxi updateReservaTaxi(Long id, ReservaTaxi reservaTaxi) {
+        if (!reservaTaxiRepository.existsById(id)) {
+            throw new IllegalArgumentException("ReservaTaxi no encontrada.");
+        }
+        reservaTaxi.setId(id);
+        return reservaTaxiRepository.save(reservaTaxi);
+    }
+
     @Transactional
     public String deleteReservaTaxi(Long reservaId) {
         return logica.deleteReservaConRespuesta(
